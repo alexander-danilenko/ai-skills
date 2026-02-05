@@ -1,6 +1,14 @@
-# ✨ AI Skills Collection
+<p align="center">
+  <img src="./assets/logo.svg" width="200" alt="AI Skills — code brackets in a badge with skill nodes" />
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+<h1 align="center">✨ AI Skills Collection</h1>
+
+<p align="center">
+  <a href="https://github.com/alexander-danilenko/ai-skills/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+  </a>
+</p>
 
 > 🚀 Personal skills library for AI coding assistants (Claude Code, Cursor, Codex, OpenCode, GitHub Copilot)
 
