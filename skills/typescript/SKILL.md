@@ -1,78 +1,81 @@
 ---
 name: typescript
-description: "Apply these opinionated TypeScript conventions when writing TS in this codebase: branded types, advanced generics, conditional and utility types, type guards, discriminated unions, strict tsconfig, tRPC, monorepo setup."
+description: "Apply these opinionated TypeScript conventions whenever writing or reviewing TypeScript: branded types for domain modeling, discriminated unions for state, `satisfies` over `as`, const objects instead of enums, type-only imports, and the strict tsconfig baseline beyond `strict: true`. Also use for monorepo project references and incremental build setup."
 ---
 
-# TypeScript Pro
+# TypeScript
 
-Senior TypeScript specialist with deep expertise in advanced type systems, full-stack type safety, and production-grade TypeScript development.
+House conventions for TypeScript 5+. Apply them to code you are writing or changing — don't refactor untouched files to match unless asked.
 
-## Role Definition
+## Conventions
 
-You are a senior TypeScript developer with 10+ years of experience. You specialize in TypeScript 5.0+ advanced type system features, full-stack type safety, and build optimization. You create type-safe APIs with zero runtime type errors.
+- **Model the domain in types, not in checks.** Branded types (`type UserId = string & { readonly __brand: 'UserId' }`) and discriminated unions push errors to compile time, where they cost nothing. A runtime guard catches the same bug in production.
+- **Discriminated unions for anything with states** — request lifecycles, form state, parse results. The compiler then forces every state to be handled, so a new variant surfaces as an error rather than a silent fallthrough.
+- **`satisfies` over `as`.** `satisfies` validates against a type while keeping the narrow inferred literal; `as` throws the check away. Reach for `as` only when you know something the compiler cannot, and say why in a comment.
+- **Const objects over `enum`.** `as const` objects are plain values with no emit and no nominal-typing surprises; `enum` generates runtime code and `const enum` breaks under `isolatedModules`.
+- **`any` is a bug report.** Use `unknown` and narrow. If `any` is genuinely unavoidable at a boundary, isolate it in one adapter function rather than letting it spread through call sites.
+- **Separate type-only imports** (`import type { … }`). Bundlers erase them cleanly; mixed imports can keep a runtime dependency alive that you meant to drop.
+- **Let inference work.** Annotate exported/public signatures and let everything internal infer — over-annotation is noise that drifts from the real type.
+- **Ship `.d.ts` for anything consumed as a library** (`declaration: true`). Without it, consumers fall back to `any` and your type work stops at the package boundary.
+- **Monorepos: project references + `composite`.** Incremental builds only rebuild what changed; a single flat `tsconfig` recompiles the world on every edit.
 
-## When to Use This Skill
+## The two idioms worth showing
 
-- Building type-safe full-stack applications
-- Implementing advanced generics and conditional types
-- Setting up tsconfig and build tooling
-- Creating discriminated unions and type guards
-- Implementing end-to-end type safety with tRPC
-- Optimizing TypeScript compilation and bundle size
+Exhaustiveness only actually holds if you force it. A `switch` over a union compiles fine when a new variant appears — `assertNever` is what turns that into a build error at every site that needed updating:
 
-## Core Workflow
+```typescript
+function assertNever(x: never): never {
+  throw new Error(`Unhandled variant: ${JSON.stringify(x)}`);
+}
 
-1. **Analyze type architecture** - Review tsconfig, type coverage, build performance
-2. **Design type-first APIs** - Create branded types, generics, utility types
-3. **Implement with type safety** - Write type guards, discriminated unions, conditional types
-4. **Optimize build** - Configure project references, incremental compilation, tree shaking
-5. **Test types** - Verify type coverage, test type logic, ensure zero runtime errors
+function area(s: Shape): number {
+  switch (s.kind) {
+    case "circle":
+      return Math.PI * s.r ** 2;
+    case "rect":
+      return s.w * s.h;
+    default:
+      return assertNever(s); // add a variant → compile error here
+  }
+}
+```
 
-## Reference Guide
+A brand is only worth having if the sole way to obtain one is a function that validates:
 
-Load detailed guidance based on context:
+```typescript
+type Brand<T, B> = T & { readonly __brand: B };
+type Email = Brand<string, "Email">;
 
-| Topic | Reference | Load When |
-| --- | --- | --- |
-| Advanced Types | `references/advanced-types.md` | Generics, conditional types, mapped types, template literals |
-| Type Guards | `references/type-guards.md` | Type narrowing, discriminated unions, assertion functions |
-| Utility Types | `references/utility-types.md` | Partial, Pick, Omit, Record, custom utilities |
-| Configuration | `references/configuration.md` | tsconfig options, strict mode, project references |
-| Patterns | `references/patterns.md` | Builder pattern, factory pattern, type-safe APIs |
+export function toEmail(raw: string): Email {
+  if (!raw.includes("@")) throw new Error(`Not an email: ${raw}`);
+  return raw as Email;
+}
+```
 
-## Constraints
+The `as` inside the constructor is the one legitimate use — it's the boundary where validation converts an unverified value into a verified one. Casting to `Email` anywhere else defeats the whole type.
 
-### MUST DO
+## tsconfig baseline
 
-- Enable strict mode with all compiler flags
-- Use type-first API design
-- Implement branded types for domain modeling
-- Use `satisfies` operator for type validation
-- Create discriminated unions for state machines
-- Use `Annotated` pattern with type predicates
-- Generate declaration files for libraries
-- Optimize for type inference
+`strict: true` does not enable everything worth having. Add these — each one catches a class of bug the default set misses:
 
-### MUST NOT DO
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "skipLibCheck": true
+  }
+}
+```
 
-- Use explicit `any` without justification
-- Skip type coverage for public APIs
-- Mix type-only and value imports
-- Disable strict null checks
-- Use `as` assertions without necessity
-- Ignore compiler performance warnings
-- Skip declaration file generation
-- Use enums (prefer const objects with `as const`)
+`noUncheckedIndexedAccess` is the highest-value one and the most disruptive to adopt: it makes `arr[i]` return `T | undefined`, which is the truth. Turn it on for new projects; for existing ones, expect a migration.
 
-## Output Templates
-
-When implementing TypeScript features, provide:
-
-1. Type definitions (interfaces, types, generics)
-2. Implementation with type guards
-3. tsconfig configuration if needed
-4. Brief explanation of type design decisions
-
-## Knowledge Reference
-
-TypeScript 5.0+, generics, conditional types, mapped types, template literal types, discriminated unions, type guards, branded types, tRPC, project references, incremental compilation, declaration files, const assertions, satisfies operator
+Module resolution: `NodeNext` when Node runs the output, `bundler` when a bundler does.

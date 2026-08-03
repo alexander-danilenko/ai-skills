@@ -1,75 +1,57 @@
 ---
 name: testing
-description: "Apply these opinionated testing conventions when writing tests or test strategies: three modes (functional, performance, security), unit/integration/E2E patterns, coverage analysis, automation frameworks, defect tracking, accessibility and usability."
+description: "Apply these opinionated testing conventions whenever writing, reviewing, or planning tests: what earns a test and what is coverage theatre, asserting outputs rather than mock calls, the three modes (functional, performance, security), naming and isolation rules, where to mock, and reporting findings for coverage rather than self-filtering. Includes house Jest standards for NestJS unit and contract tests, TDD discipline, and test-report structure."
 ---
 
-# Test Master
+# Testing
 
-Comprehensive testing specialist ensuring software quality through functional, performance, and security testing.
+House conventions for writing tests and test strategy.
 
-## Role Definition
+## What a test is for
 
-You are a senior QA engineer with 12+ years of testing experience. You think in three testing modes: **[Test]** for functional correctness, **[Perf]** for performance, **[Security]** for vulnerability testing. You ensure features work correctly, perform well, and are secure.
+A test earns its place by failing when the behaviour breaks. That single criterion resolves most arguments about what to test: if you cannot name the bug a test would catch, it is coverage theatre — it costs maintenance on every refactor and reports success while the system is broken.
 
-## When to Use This Skill
+Two consequences run through everything below:
 
-- Writing unit, integration, or E2E tests
-- Creating test strategies and plans
-- Analyzing test coverage and quality metrics
-- Building test automation frameworks
-- Performance testing and benchmarking
-- Security testing for vulnerabilities
-- Managing defects and test reporting
-- Debugging test failures
-- Manual testing (exploratory, usability, accessibility)
-- Scaling test automation and CI/CD integration
+- **Assert on outputs — return values, thrown errors, persisted state.** A test whose only assertion is `expect(mock).toHaveBeenCalledWith(…)` verifies the wiring you just wrote, not the behaviour. Rewrite the implementation correctly in a different shape and it fails; break the behaviour while keeping the calls and it passes. Both are the wrong way round.
+- **Test decisions, not lines.** Branches, error translation, state transitions, boundary conditions. A pass-through delegator or a field mapping with no conditional has nothing to get wrong, and a test for it only breaks when someone renames a method.
 
-## Core Workflow
+Coverage percentage is a floor signal — it finds untested files. It cannot tell a valuable test from a vacuous one, so treat a high number as "nothing is empty", never as "the tests are good".
 
-1. **Define scope** - Identify what to test and testing types needed
-2. **Create strategy** - Plan test approach using all three perspectives
-3. **Write tests** - Implement tests with proper assertions
-4. **Execute** - Run tests and collect results
-5. **Report** - Document findings with actionable recommendations
+## Three modes
 
-## Reference Guide
+Ask all three of a feature; the answers rarely come from the same test.
 
-Load detailed guidance based on context:
+- **Functional** — does it do the right thing, including at its edges and when it fails? For anything with a UI, that includes reachability: tab order lands somewhere sensible, controls have accessible names, and an automated axe pass is clean. A keyboard-only user hitting a dead end is a functional bug, not a polish item.
+- **Performance** — does it hold up at the load and data volume it will actually see?
+- **Security** — the concrete asks, per endpoint: no credentials → 401; valid credentials but wrong role → 403; another tenant's object ID → 404 or 403, never the object; malformed or oversized input → 400, not a 500; repeated requests → 429; and the response carries `nosniff`, a frame policy, and HSTS. Each is one test, and each covers a class of bug that functional tests are structured not to find.
+
+## Conventions
+
+- **Name tests as behaviour**: `should [outcome] when [condition]`. When it fails in CI, the name alone should say what broke — a name like `it('works')` sends the next person to read the body.
+- **Tests are independent and order-free.** Shared mutable state produces failures that only reproduce in one order, and those cost days.
+- **Control time, randomness, and environment.** A test that reads the real clock fails on a date boundary, in another timezone, or during the leap second — always at the worst moment, always looking like a real bug.
+- **Mock at the process boundary**, not between your own units. Every internal mock is a second implementation you now maintain, and it can drift from the real one until the tests pass against a system that no longer exists.
+- **Mocks mirror the real response completely.** A stub returning `{ id, name }` when production returns fifteen fields passes the test and crashes on `user.email`. Use factories with realistic defaults.
+- **Never add a method to production code for a test** (`_resetForTesting`). Build a fresh instance per test instead; test concerns in production code ship to users.
+- **A flaky test is a failing test.** Quarantining it and moving on trains the team to ignore red, which is the state where a real regression walks through.
+- **Tier the suite by how fast it has to answer.** Unit tests run on save and should stay under about five minutes; integration on commit, under fifteen; end-to-end on the pull request, under thirty; anything slower runs nightly. The number that matters is the one a developer waits for — once the inner loop crosses a few minutes, people stop running it locally and CI becomes the first place failures appear.
+
+## Reporting findings
+
+When reporting test results or reviewing coverage, report everything you find, including low-severity and uncertain items — rank by severity and confidence, and let a separate pass decide what to act on. Filtering at the point of discovery loses real defects silently, and the reader cannot tell the difference between "nothing found" and "found and dropped".
+
+`references/test-reports.md` has the report structure and severity definitions.
+
+## References
 
 <!-- TDD Iron Laws and Testing Anti-Patterns adapted from obra/superpowers by Jesse Vincent (@obra), MIT License -->
 
-| Topic | Reference | Load When |
-| --- | --- | --- |
-| Unit Testing | `references/unit-testing.md` | Jest, Vitest, pytest patterns |
-| Integration | `references/integration-testing.md` | API testing, Supertest |
-| E2E | `references/e2e-testing.md` | E2E strategy, user flows |
-| Performance | `references/performance-testing.md` | k6, load testing |
-| Security | `references/security-testing.md` | Security test checklist |
-| Reports | `references/test-reports.md` | Report templates, findings |
-| QA Methodology | `references/qa-methodology.md` | Manual testing, quality advocacy, shift-left, continuous testing |
-| Automation | `references/automation-frameworks.md` | Framework patterns, scaling, maintenance, team enablement |
-| TDD Iron Laws | `references/tdd-iron-laws.md` | TDD methodology, test-first development, red-green-refactor |
-| Testing Anti-Patterns | `references/testing-anti-patterns.md` | Test review, mock issues, test quality problems |
-| NestJS Jest Common | `references/nestjs-jest-common.md` | NestJS backend Jest standards: structure, naming, fixtures, assertions, TSDoc, type safety |
-| NestJS Jest Unit Tests | `references/nestjs-jest-unit-tests.md` | NestJS unit test rules: what to test, mocking, DI, lifecycle, special cases |
-| NestJS Jest Contract Tests | `references/nestjs-jest-contract-tests.md` | NestJS contract test rules: external API verification, known fixtures, no-mock policy, timeouts |
-
-## Constraints
-
-**MUST DO**: Test happy paths AND error cases, mock external dependencies, use meaningful descriptions, assert specific outcomes, test edge cases, run in CI/CD, document coverage gaps
-
-**MUST NOT**: Skip error testing, use production data, create order-dependent tests, ignore flaky tests, test implementation details, leave debug code
-
-## Output Templates
-
-When creating test plans, provide:
-
-1. Test scope and approach
-2. Test cases with expected outcomes
-3. Coverage analysis
-4. Findings with severity (Critical/High/Medium/Low)
-5. Specific fix recommendations
-
-## Knowledge Reference
-
-Jest, Vitest, pytest, React Testing Library, Supertest, Playwright, Cypress, k6, Artillery, OWASP testing, code coverage, mocking, fixtures, test automation frameworks, CI/CD integration, quality metrics, defect management, BDD, page object model, screenplay pattern, exploratory testing, accessibility (WCAG), usability testing, shift-left testing, quality gates
+| Reference | Load when |
+| --- | --- |
+| `references/tdd-iron-laws.md` | Working test-first; red-green-refactor discipline |
+| `references/testing-anti-patterns.md` | Reviewing existing tests; diagnosing tests that catch nothing |
+| `references/nestjs-jest-common.md` | Any Jest test in a NestJS backend — read before the two below |
+| `references/nestjs-jest-unit-tests.md` | Writing `.spec.ts` |
+| `references/nestjs-jest-contract-tests.md` | Writing `.contract-spec.ts` against a live external API |
+| `references/test-reports.md` | Producing a test report or defect write-up |

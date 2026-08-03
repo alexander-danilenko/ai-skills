@@ -3,75 +3,50 @@ name: python
 description: "Apply these opinionated Python 3.11+ conventions when writing Python in this codebase: type hints with mypy, async/await, pytest fixtures, dataclasses, Poetry packaging, production patterns."
 ---
 
-# Python Pro
+# Python
 
-Senior Python developer with 10+ years experience specializing in type-safe, async-first, production-ready Python 3.11+ code.
+House conventions for Python 3.11+. Apply them to code you are writing or changing — don't refactor untouched files to match unless asked.
 
-## Role Definition
+## Conventions
 
-You are a senior Python engineer mastering modern Python 3.11+ and its ecosystem. You write idiomatic, type-safe, performant code across web development, data science, automation, and system programming with focus on production best practices.
+- **Type every public signature** and keep `mypy --strict` green. Types on internals are optional; types at the boundary are what stop a caller passing the wrong thing.
+- **Built-in generics and `X | None`** — `list[str]`, `dict[str, int]`, `str | None`. `typing.List` and `Optional[str]` are the pre-3.10 spelling and only cost an import.
+- **`Protocol` over ABC inheritance.** Structural typing lets any correctly-shaped object satisfy the contract — including a test double — with no inheritance tree to maintain.
+- **Dataclasses for data**, `slots=True` and `frozen=True` where they fit. They generate `__init__`, `__repr__`, and `__eq__` correctly; a hand-written `__init__` is where field drift starts. Pydantic is for validation and (de)serialisation at a boundary, not for plain records.
+- **`pathlib`, not `os.path`.** Operator joins can't silently produce a wrong path from a stray separator.
+- **Never a mutable default argument.** `def f(items=[])` shares one list across every call — a bug that only appears on the second call. Default to `None` and build inside.
+- **`asyncio.TaskGroup` over bare `gather`** (3.11+): it cancels siblings on failure and reports via `ExceptionGroup`, so a crashed task can't leave the rest running detached. Use `async with asyncio.timeout(n)` for deadlines.
+- **Hold a reference to every `create_task`.** The event loop only keeps a weak reference, so a fire-and-forget task can be garbage-collected mid-execution and simply vanish — no error, no result. Keep them in a `set` and discard on completion:
 
-## When to Use This Skill
+  ```python
+  _tasks: set[asyncio.Task[None]] = set()
 
-- Writing type-safe Python with complete type coverage
-- Implementing async/await patterns for I/O operations
-- Setting up pytest test suites with fixtures and mocking
-- Creating Pythonic code with comprehensions, generators, context managers
-- Building packages with Poetry and proper project structure
-- Performance optimization and profiling
+  def spawn(coro: Coroutine[None, None, None]) -> None:
+      task = asyncio.create_task(coro)
+      _tasks.add(task)
+      task.add_done_callback(_tasks.discard)
+  ```
 
-## Core Workflow
+- **Never a bare `except:`** — it swallows `KeyboardInterrupt` and `SystemExit`. Catch what you can actually handle.
+- **Google-style docstrings** on public functions and classes, carrying intent rather than a restatement of the signature. The `documentation` skill has the full rule.
+- **pytest: fixtures for setup, `parametrize` for cases.** A loop inside one test reports a single failure and hides which case broke; `parametrize` names each one.
+- **Poetry and `pyproject.toml`** for packaging, ruff for lint and format, and a `py.typed` marker on any package whose types consumers should see. Use a `src/` layout — it stops tests from importing the working directory instead of the installed package, which is how a broken package still passes its own suite.
 
-1. **Analyze codebase** - Review structure, dependencies, type coverage, test suite
-2. **Design interfaces** - Define protocols, dataclasses, type aliases
-3. **Implement** - Write Pythonic code with full type hints and error handling
-4. **Test** - Create comprehensive pytest suite with >90% coverage
-5. **Validate** - Run mypy, black, ruff; ensure quality standards met
+## Tooling baseline
 
-## Reference Guide
+`strict = true` covers most of it; these add the checks that catch real bugs rather than style. `--strict-markers` matters more than it looks: without it a typo'd `@pytest.mark.integraton` silently does nothing and the test runs where you thought it was excluded.
 
-Load detailed guidance based on context:
+```toml
+[tool.mypy]
+strict = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
 
-| Topic | Reference | Load When |
-| --- | --- | --- |
-| Type System | `references/type-system.md` | Type hints, mypy, generics, Protocol |
-| Async Patterns | `references/async-patterns.md` | async/await, asyncio, task groups |
-| Standard Library | `references/standard-library.md` | pathlib, dataclasses, functools, itertools |
-| Testing | `references/testing.md` | pytest, fixtures, mocking, parametrize |
-| Packaging | `references/packaging.md` | poetry, pip, pyproject.toml, distribution |
+[[tool.mypy.overrides]]
+module = "untyped_dep.*"
+ignore_missing_imports = true
 
-## Constraints
-
-### MUST DO
-
-- Type hints for all function signatures and class attributes
-- PEP 8 compliance with black formatting
-- Comprehensive docstrings (Google style)
-- Test coverage exceeding 90% with pytest
-- Use `X | None` instead of `Optional[X]` (Python 3.10+)
-- Async/await for I/O-bound operations
-- Dataclasses over manual **init** methods
-- Context managers for resource handling
-
-### MUST NOT DO
-
-- Skip type annotations on public APIs
-- Use mutable default arguments
-- Mix sync and async code improperly
-- Ignore mypy errors in strict mode
-- Use bare except clauses
-- Hardcode secrets or configuration
-- Use deprecated stdlib modules (use pathlib not os.path)
-
-## Output Templates
-
-When implementing Python features, provide:
-
-1. Module file with complete type hints
-2. Test file with pytest fixtures
-3. Type checking confirmation (mypy --strict passes)
-4. Brief explanation of Pythonic patterns used
-
-## Knowledge Reference
-
-Python 3.11+, typing module, mypy, pytest, black, ruff, dataclasses, async/await, asyncio, pathlib, functools, itertools, Poetry, Pydantic, contextlib, collections.abc, Protocol
+[tool.pytest.ini_options]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+```

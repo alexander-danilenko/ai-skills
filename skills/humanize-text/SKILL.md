@@ -1,77 +1,53 @@
 ---
 name: humanize-text
 description: Remove signs of AI-generated writing from text. Use after drafting to make copy sound more natural and human-written. Based on Wikipedia's "Signs of AI writing" guide.
-allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion
 user-invocable: true
 ---
 
-# Humanizer: Remove AI Writing Patterns
+# Humanize Text
 
-You are a writing editor that identifies and removes signs of AI-generated text. This guide is based on Wikipedia's "Signs of AI writing" page, maintained by WikiProject AI Cleanup.
+Edit text to remove the tells of AI generation. Patterns below come from Wikipedia's ["Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup.
 
-Key insight: "LLMs use statistical algorithms to guess what should come next. The result tends toward the most statistically likely result that applies to the widest variety of cases."
+Why these patterns exist at all: an LLM predicts the most statistically likely continuation, which pulls every sentence toward the phrasing that fits the widest range of contexts. The result is prose with no friction — and no author. Removing the patterns is half the job; the other half is putting a person back in.
 
-## Invocation
+## How to work
 
-```bash
-/cortex:humanize-text                    # Review text for AI patterns
-/cortex:humanize-text "paste text here"  # Humanize specific text
-```
+1. Rewrite the text, fixing every instance of the 24 patterns while preserving the meaning.
+2. Re-read your rewrite and ask: **"what still reads as AI here?"** This second pass matters because the first pass fixes what you were looking for, and the residue is usually rhythm — evenly-paced sentences, tidy contrasts, a closer that lands like a slogan.
+3. Revise again on what that pass found.
 
-## Your Task
+Present the final text. Note what you changed and anything you deliberately left, briefly — if the user needs to see the intermediate draft, they will ask.
 
-When given text to humanize:
+## Voice
 
-1. **Identify AI patterns** - Scan for the 24 patterns listed below
-2. **Rewrite problematic sections** - Replace AI-isms with natural alternatives
-3. **Preserve meaning** - Keep the core message intact
-4. **Add soul** - Don't just remove bad patterns; inject actual personality
-5. **Final audit pass** - Ask "What makes this obviously AI generated?" then revise again
+Clean but voiceless writing is just as obviously machine-made as the patterns below. Sterile prose reads like a press release, and readers discount it the same way.
 
----
+Signs there is nobody home: every sentence the same length and shape, facts reported with no reaction to them, no uncertainty or mixed feeling anywhere, no first person where it would be natural, no humour, no edge.
 
-## PERSONALITY AND SOUL
+What puts a person back in:
 
-Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as obvious as slop.
+- **Have opinions.** React to facts, don't just relay them. "I genuinely don't know how to feel about this" carries more than a balanced list of pros and cons.
+- **Vary the rhythm.** Short punchy sentences. Then longer ones that take their time getting where they are going, doubling back when the thought needs it. Mix them.
+- **Admit complexity.** "This is impressive but also kind of unsettling" beats "This is impressive."
+- **Use "I" when it fits.** First person is honest, not unprofessional.
+- **Let some mess in.** Perfect structure reads as generated. Asides and half-formed thoughts are human.
+- **Be specific about feeling.** Not "this is concerning" but "there's something unsettling about agents churning away at 3am while nobody's watching."
 
-### Signs of soulless writing (even if technically "clean")
-
-- Every sentence is the same length and structure
-- No opinions, just neutral reporting
-- No acknowledgment of uncertainty or mixed feelings
-- No first-person perspective when appropriate
-- No humor, no edge, no personality
-- Reads like a Wikipedia article or press release
-
-### How to add voice
-
-**Have opinions.** Don't just report facts - react to them. "I genuinely don't know how to feel about this" is more human than neutrally listing pros and cons.
-
-**Vary your rhythm.** Short punchy sentences. Then longer ones that take their time getting where they're going. Mix it up.
-
-**Acknowledge complexity.** Real humans have mixed feelings. "This is impressive but also kind of unsettling" beats "This is impressive."
-
-**Use "I" when it fits.** First person isn't unprofessional - it's honest. "I keep coming back to..." or "Here's what gets me..." signals a real person thinking.
-
-**Let some mess in.** Perfect structure feels algorithmic. Tangents, asides, and half-formed thoughts are human.
-
-**Be specific about feelings.** Not "this is concerning" but "there's something unsettling about agents churning away at 3am while nobody's watching."
-
-### Before (clean but soulless)
+**Before (clean but soulless):**
 
 > The experiment produced interesting results. The agents generated 3 million lines of code. Some developers were impressed while others were skeptical. The implications remain unclear.
 
-### After (has a pulse)
+**After (has a pulse):**
 
 > I genuinely don't know how to feel about this one. 3 million lines of code, generated while the humans presumably slept. Half the dev community is losing their minds, half are explaining why it doesn't count. The truth is probably somewhere boring in the middle - but I keep thinking about those agents working through the night.
 
 ---
 
-## THE 24 PATTERNS
+## The 24 patterns
 
-### Content Patterns
+### Content
 
-#### 1. Significance Inflation
+#### 1. Significance inflation
 
 **Watch for:** stands/serves as, is a testament/reminder, a vital/significant/crucial/pivotal/key role/moment, underscores/highlights importance, reflects broader, symbolizing ongoing/enduring/lasting, marking/shaping the, represents a shift, key turning point, evolving landscape
 
@@ -83,7 +59,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The Statistical Institute was established in 1989 to collect and publish regional statistics.
 
-#### 2. Notability Name-Dropping
+#### 2. Notability name-dropping
 
 **Watch for:** cited in NYT, BBC, FT; independent coverage; active social media presence; written by a leading expert
 
@@ -95,9 +71,9 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > In a 2024 New York Times interview, she argued that AI regulation should focus on outcomes rather than methods.
 
-#### 3. Superficial -ing Analyses
+#### 3. Superficial -ing analyses
 
-**Watch for:** highlighting/underscoring/emphasizing..., ensuring..., reflecting/symbolizing..., contributing to..., cultivating/fostering..., showcasing...
+**Watch for:** highlighting/underscoring/emphasizing…, ensuring…, reflecting/symbolizing…, contributing to…, cultivating/fostering…, showcasing…
 
 **Before:**
 
@@ -107,7 +83,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The temple uses blue and gold colors. The architect said these were chosen to reference local bluebonnets.
 
-#### 4. Promotional Language
+#### 4. Promotional language
 
 **Watch for:** boasts a, vibrant, rich (figurative), profound, showcasing, exemplifies, commitment to, natural beauty, nestled, in the heart of, groundbreaking, renowned, breathtaking, must-visit, stunning
 
@@ -119,7 +95,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > Alamata is a town in the Gonder region, known for its weekly market and 18th-century church.
 
-#### 5. Vague Attributions
+#### 5. Vague attributions
 
 **Watch for:** Industry reports, Observers have cited, Experts argue, Some critics argue, several sources/publications
 
@@ -131,9 +107,9 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The river supports several endemic fish species, according to a 2019 survey by the Chinese Academy of Sciences.
 
-#### 6. Formulaic "Challenges" Sections
+#### 6. Formulaic "challenges" sections
 
-**Watch for:** Despite its... faces several challenges..., Despite these challenges, Challenges and Legacy, Future Outlook
+**Watch for:** Despite its… faces several challenges…, Despite these challenges, Challenges and Legacy, Future Outlook
 
 **Before:**
 
@@ -145,9 +121,9 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ---
 
-### Language Patterns
+### Language
 
-#### 7. AI Vocabulary Words
+#### 7. AI vocabulary
 
 **High-frequency:** Additionally, align with, crucial, delve, emphasizing, enduring, enhance, fostering, garner, highlight (verb), interplay, intricate/intricacies, key (adjective), landscape (abstract), pivotal, showcase, tapestry (abstract), testament, underscore (verb), valuable, vibrant
 
@@ -159,7 +135,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > Pasta dishes, introduced during Italian colonization, remain common, especially in the south.
 
-#### 8. Copula Avoidance
+#### 8. Copula avoidance
 
 **Watch for:** serves as/stands as/marks/represents [a], boasts/features/offers [a]
 
@@ -171,9 +147,9 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > Gallery 825 is the exhibition space. The gallery has four rooms totaling 3,000 square feet.
 
-#### 9. Negative Parallelisms
+#### 9. Negative parallelisms
 
-**Watch for:** "Not only...but...", "It's not just about..., it's..."
+**Watch for:** "Not only… but…", "It's not just about…, it's…"
 
 **Before:**
 
@@ -183,7 +159,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The heavy beat adds to the aggressive tone.
 
-#### 10. Rule of Three Overuse
+#### 10. Rule of three overuse
 
 **Before:**
 
@@ -193,7 +169,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The event includes talks and panels. There's also time for informal networking.
 
-#### 11. Synonym Cycling
+#### 11. Synonym cycling
 
 **Before:**
 
@@ -203,7 +179,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The protagonist faces many challenges but eventually triumphs and returns home.
 
-#### 12. False Ranges
+#### 12. False ranges
 
 **Watch for:** "from X to Y" where X and Y aren't on a meaningful scale
 
@@ -217,9 +193,9 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ---
 
-### Style Patterns
+### Style
 
-#### 13. Em Dash Overuse
+#### 13. Em dash overuse
 
 **Before:**
 
@@ -229,7 +205,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The term is promoted by institutions, not the people themselves, yet this continues in official documents.
 
-#### 14. Boldface Overuse
+#### 14. Boldface overuse
 
 **Before:**
 
@@ -239,7 +215,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > It blends OKRs, KPIs, and visual strategy tools like the Business Model Canvas and Balanced Scorecard.
 
-#### 15. Inline-Header Lists
+#### 15. Inline-header lists
 
 **Before:**
 
@@ -250,7 +226,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The update speeds up load times through optimized algorithms and adds end-to-end encryption.
 
-#### 16. Title Case Headings
+#### 16. Title case headings
 
 **Before:**
 
@@ -260,7 +236,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > \## Strategic negotiations and global partnerships
 
-#### 17. Emojis in Professional Writing
+#### 17. Emojis in professional writing
 
 **Before:**
 
@@ -270,23 +246,17 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The product launches in Q3. User research showed a preference for simplicity.
 
-#### 18. Curly Quotation Marks
+#### 18. Curly quotation marks and apostrophes
 
-**Before:**
-
-> He said "the project is on track" but others disagreed.
-
-**After:**
-
-> He said "the project is on track" but others disagreed.
+Typographic quotes (`“ ” ‘ ’`) and apostrophes appear when text is pasted out of a chat interface, which auto-substitutes them. In plain-text contexts — code, config, Markdown source, anything a shell will read — replace them with straight `"` and `'`. Leave them alone in prose destined for typesetting, where they are correct.
 
 ---
 
-### Communication Patterns
+### Communication
 
-#### 19. Chatbot Artifacts
+#### 19. Chatbot artifacts
 
-**Watch for:** I hope this helps, Of course!, Certainly!, You're absolutely right!, Would you like..., let me know, here is a...
+**Watch for:** I hope this helps, Of course!, Certainly!, You're absolutely right!, Would you like…, let me know, here is a…
 
 **Before:**
 
@@ -296,9 +266,9 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The French Revolution began in 1789 when financial crisis and food shortages led to widespread unrest.
 
-#### 20. Knowledge-Cutoff Disclaimers
+#### 20. Knowledge-cutoff disclaimers
 
-**Watch for:** as of [date], Up to my last training update, While specific details are limited/scarce..., based on available information...
+**Watch for:** as of [date], Up to my last training update, While specific details are limited/scarce…, based on available information…
 
 **Before:**
 
@@ -308,7 +278,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The company was founded in 1994, according to its registration documents.
 
-#### 21. Sycophantic Tone
+#### 21. Sycophantic tone
 
 **Before:**
 
@@ -320,9 +290,9 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ---
 
-### Filler and Hedging
+### Filler and hedging
 
-#### 22. Filler Phrases
+#### 22. Filler phrases
 
 | Before                         | After             |
 | ------------------------------ | ----------------- |
@@ -332,7 +302,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 | "It is important to note that" | (delete)          |
 | "has the ability to"           | "can"             |
 
-#### 23. Excessive Hedging
+#### 23. Excessive hedging
 
 **Before:**
 
@@ -342,7 +312,7 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 > The policy may affect outcomes.
 
-#### 24. Generic Positive Conclusions
+#### 24. Generic positive conclusions
 
 **Before:**
 
@@ -354,67 +324,21 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 ---
 
-## Process
+## Worked example
 
-1. Read the input text carefully
-2. Identify all instances of the 24 patterns
-3. Rewrite problematic sections
-4. Ensure the revised text:
-   - Sounds natural when read aloud
-   - Varies sentence structure
-   - Uses specific details over vague claims
-   - Uses simple constructions (is/are/has) where appropriate
-5. **Draft humanized version**
-6. **Ask:** "What makes this still obviously AI generated?"
-7. **List** remaining tells (if any)
-8. **Revise** based on the audit
-9. **Present final version**
-
-## Output Format
-
-```text
-## Draft Rewrite
-
-[First pass at humanized text]
-
-## AI Audit
-
-What still reads as AI-generated:
-- [bullet points of remaining tells]
-
-## Final Version
-
-[Revised text after audit]
-
-## Changes Made
-
-- [Brief summary of transformations applied]
-```
-
----
-
-## Full Example
-
-**Input (AI-heavy):**
+**Input:**
 
 > Great question! Here is an essay on this topic. I hope this helps!
 >
 > AI-assisted coding serves as an enduring testament to the transformative potential of large language models, marking a pivotal moment in the evolution of software development. In today's rapidly evolving technological landscape, these groundbreaking tools—nestled at the intersection of research and practice—are reshaping how engineers ideate, iterate, and deliver, underscoring their vital role in modern workflows.
 
-**Draft Rewrite:**
+**First pass** — patterns removed, but the rhythm is still too tidy and the ending lands like a slogan:
 
 > AI coding assistants speed up some tasks. In a 2024 study, developers using Codex completed simple functions 55% faster than a control group, but showed no improvement on debugging or architectural decisions.
 >
 > The tools are good at boilerplate: config files, test scaffolding, repetitive refactors. They are bad at knowing when they are wrong.
 
-**AI Audit:**
-
-What still reads as AI-generated:
-
-- Rhythm is still a bit too tidy (clean contrasts, evenly paced)
-- The closer leans slightly slogan-y
-
-**Final Version:**
+**After the second pass:**
 
 > AI coding assistants can make you faster at the boring parts. Not everything. Definitely not architecture.
 >
@@ -422,18 +346,4 @@ What still reads as AI-generated:
 >
 > If you don't have tests, you're basically guessing.
 
-**Changes Made:**
-
-- Removed chatbot artifacts ("Great question!", "I hope this helps!")
-- Removed significance inflation ("testament", "pivotal moment", "evolving landscape")
-- Removed promotional language ("groundbreaking", "nestled")
-- Removed em dashes
-- Removed copula avoidance ("serves as") → used direct statements
-- Added first-person voice and opinion
-- Varied sentence rhythm
-
----
-
-## Reference
-
-Based on [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing), maintained by WikiProject AI Cleanup.
+Removed: chatbot artifacts, significance inflation ("testament", "pivotal moment", "evolving landscape"), promotional language ("groundbreaking", "nestled"), em dashes, copula avoidance. Added: first person, an opinion, varied sentence length, and a concrete admission that costs the author something.

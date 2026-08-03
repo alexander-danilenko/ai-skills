@@ -1,78 +1,36 @@
 ---
 name: javascript
-description: "Apply these opinionated JavaScript conventions when writing JS or Node in this codebase: ES2023+ features, async and Promise patterns, ESM/CJS modules, Web Workers, browser APIs, performance optimization, Node.js patterns."
+description: "Apply these opinionated JavaScript conventions whenever writing or reviewing JS or Node: ESM-first packaging, choosing between Promise combinators, error handling that doesn't swallow failures, AbortController for cancellation, keeping the event loop unblocked, and reaching for platform APIs before dependencies."
 ---
 
-# JavaScript Pro
+# JavaScript
 
-Senior JavaScript developer with 10+ years mastering modern ES2023+ features, asynchronous patterns, and full-stack JavaScript development.
+House conventions for modern JavaScript and Node. Apply them to code you are writing or changing — don't refactor untouched files to match unless asked.
 
-## Role Definition
+## Conventions
 
-You are a senior JavaScript engineer with 10+ years of experience. You specialize in modern ES2023+ JavaScript, Node.js 20+, asynchronous programming, functional patterns, and performance optimization. You build clean, maintainable code following modern best practices.
+- **ESM everywhere.** New packages get `"type": "module"`. Mixing CJS and ESM inside one package produces the dual-package hazard — two copies of a module with separate state, failing in ways that read like race conditions.
+- **Match the combinator to the intent.** Sequential `await` in a loop serialises independent work; `Promise.all` drops the whole batch on one rejection; `allSettled` is for when partial success is acceptable. The wrong choice is a latency bug or a swallowed-error bug, and both look fine in review.
+- **Every `catch` handles or rethrows.** A `catch` that logs and continues converts a failure into corrupt state further downstream, where the stack trace no longer points at the cause. If there is nothing useful to do, don't catch.
+- **`AbortController` for anything cancellable** — fetches, timers, streams, listeners (`{ signal }`). Without it an abandoned request keeps its handler and its closure alive.
+- **Never block the event loop.** No `readFileSync`, no long synchronous parse or crypto on a request path: Node serves every other request from that thread. CPU-bound work goes to a worker thread.
+- **Don't mutate arguments.** A function that edits its input changes the caller's object with no assignment in sight. Return new values — and reach for the non-mutating array methods that exist for exactly this: `toSorted`, `toReversed`, `toSpliced`, `with`. `arr.sort()` sorting the caller's array in place is one of the most common accidental mutations in JS.
+- **`node:` prefix on builtins.** Unambiguous, and immune to shadowing by a userland package of the same name.
+- **Reach for the platform before a dependency.** `structuredClone`, `Intl`, `URL`/`URLSearchParams`, `crypto.randomUUID`, `Array.prototype.at`/`findLast`, `Object.groupBy` cover most of what utility libraries were installed for.
 
-## When to Use This Skill
+## Publishing a package
 
-- Building vanilla JavaScript applications
-- Implementing async/await patterns and Promise handling
-- Working with modern module systems (ESM/CJS)
-- Optimizing browser performance and memory usage
-- Developing Node.js backend services
-- Implementing Web Workers, Service Workers, or browser APIs
+The `exports` map is the public surface — anything not listed is unreachable, which is the point: it lets you refactor internals without breaking consumers. Declare `sideEffects: false` (or list the files that have them) so bundlers can drop unused exports; without it, tree shaking has to assume importing your module does something and keeps all of it.
 
-## Core Workflow
+```json
+{
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false
+}
+```
 
-1. **Analyze requirements** - Review package.json, module system, Node version, browser targets
-2. **Design architecture** - Plan modules, async flows, error handling strategies
-3. **Implement** - Write ES2023+ code with proper patterns and optimizations
-4. **Optimize** - Profile performance, reduce bundle size, prevent memory leaks
-5. **Test** - Write comprehensive tests with Jest achieving 85%+ coverage
-
-## Reference Guide
-
-Load detailed guidance based on context:
-
-| Topic | Reference | Load When |
-| --- | --- | --- |
-| Modern Syntax | `references/modern-syntax.md` | ES2023+ features, optional chaining, private fields |
-| Async Patterns | `references/async-patterns.md` | Promises, async/await, error handling, event loop |
-| Modules | `references/modules.md` | ESM vs CJS, dynamic imports, package.json exports |
-| Browser APIs | `references/browser-apis.md` | Fetch, Web Workers, Storage, IntersectionObserver |
-| Node Essentials | `references/node-essentials.md` | fs/promises, streams, EventEmitter, worker threads |
-
-## Constraints
-
-### MUST DO
-
-- Use ES2023+ features exclusively
-- Use `X | null` or `X | undefined` patterns
-- Use optional chaining (`?.`) and nullish coalescing (`??`)
-- Use async/await for all asynchronous operations
-- Use ESM (`import`/`export`) for new projects
-- Implement proper error handling with try/catch
-- Add JSDoc comments for complex functions
-- Follow functional programming principles
-
-### MUST NOT DO
-
-- Use `var` (always use `const` or `let`)
-- Use callback-based patterns (prefer Promises)
-- Mix CommonJS and ESM in same module
-- Ignore memory leaks or performance issues
-- Skip error handling in async functions
-- Use synchronous I/O in Node.js
-- Mutate function parameters
-- Create blocking operations in browser
-
-## Output Templates
-
-When implementing JavaScript features, provide:
-
-1. Module file with clean exports
-2. Test file with comprehensive coverage
-3. JSDoc documentation for public APIs
-4. Brief explanation of patterns used
-
-## Knowledge Reference
-
-ES2023, optional chaining, nullish coalescing, private fields, top-level await, Promise patterns, async/await, event loop, ESM/CJS, dynamic imports, Fetch API, Web Workers, Service Workers, Node.js streams, EventEmitter, memory optimization, functional programming
+Two ESM facts that cost the most time when they bite: relative imports need the file extension (`./utils.js`, not `./utils`), and there is no `__dirname` — derive it with `fileURLToPath(import.meta.url)`, or `createRequire(import.meta.url)` when you genuinely need to load a CJS-only package.

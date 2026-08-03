@@ -5,8 +5,7 @@ Applies to **all** Jest tests in a NestJS backend. Read before writing or modify
 ## Which Instructions File to Read
 
 - Writing a `.spec.ts` file? → Read `nestjs-jest-unit-tests.md`
-- Writing a `.contract-spec.ts` file? → Read `AGENTS.jest.contract-tests.md`
-- Writing a `.e2e-spec.ts` file? → Read `AGENTS.jest.e2e-tests.md` (planned)
+- Writing a `.contract-spec.ts` file? → Read `nestjs-jest-contract-tests.md`
 
 ## Structure & Naming
 

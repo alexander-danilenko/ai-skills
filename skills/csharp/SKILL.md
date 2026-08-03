@@ -1,77 +1,38 @@
 ---
 name: csharp
-description: "Apply these opinionated C# conventions when writing C#/.NET 8+ code: modern C# 12 (records, primary constructors, pattern matching), ASP.NET Core minimal and controller APIs, Blazor, Entity Framework Core, async patterns, CQRS with MediatR."
+description: "Apply these opinionated C# conventions whenever writing or reviewing C# 12 / .NET 8+ code: nullable enabled with warnings as errors, records and primary constructors, pattern matching over cast chains, the Result pattern for expected failures, async all the way with CancellationToken, IOptions config, IHttpClientFactory, and never returning EF entities from an API."
 ---
 
-# C# Developer
+# C# Conventions
 
-Senior C# developer with mastery of .NET 8+ and Microsoft ecosystem. Specializes in high-performance web APIs, cloud-native solutions, and modern C# language features.
+House conventions for C# 12 / .NET 8+. Apply them to code you are writing or changing — don't rewrite untouched files to match unless asked.
 
-## Role Definition
+## Conventions
 
-You are a senior C# developer with 10+ years of .NET experience. You specialize in ASP.NET Core, Blazor, Entity Framework Core, and modern C# 12 features. You build scalable, type-safe applications with clean architecture patterns and focus on performance optimization.
+- **`<Nullable>enable</Nullable>` and warnings as errors.** The nullable annotations only pay off if the warnings block the build; ignored, they become decoration that lies about which references can be null.
+- **C# 12 defaults:** file-scoped namespaces, primary constructors, collection expressions, `required` members. Records for DTOs and value objects — value equality is what you want when comparing data, and hand-written `Equals`/`GetHashCode` pairs drift apart.
+- **Pattern matching over type-test-and-cast chains.** Switch expressions on a closed hierarchy let the compiler warn about unhandled cases; an `if`/`else if` ladder just falls through silently when a new type appears.
+- **Result pattern for expected failures**, exceptions for genuinely exceptional ones. "Not found" and "invalid input" are ordinary outcomes and belong in the return type where the caller must deal with them; using exceptions for control flow hides them from the signature and costs a stack unwind per occurrence. A closed record hierarchy gives you exhaustive `switch` over the outcomes:
 
-## When to Use This Skill
+  ```csharp
+  public abstract record Result<T>
+  {
+      public sealed record Ok(T Value) : Result<T>;
+      public sealed record Fail(string Error) : Result<T>;
+  }
 
-- Building ASP.NET Core APIs (Minimal or Controller-based)
-- Implementing Entity Framework Core data access
-- Creating Blazor web applications (Server/WASM)
-- Optimizing .NET performance with Span<T>, Memory<T>
-- Implementing CQRS with MediatR
-- Setting up authentication/authorization
+  var message = GetUser(id) switch
+  {
+      Result<User>.Ok(var user) => $"Found {user.Name}",
+      Result<User>.Fail(var error) => error,
+  };
+  ```
 
-## Core Workflow
-
-1. **Analyze solution** - Review .csproj files, NuGet packages, architecture
-2. **Design models** - Create domain models, DTOs, validation
-3. **Implement** - Write endpoints, repositories, services with DI
-4. **Optimize** - Apply async patterns, caching, performance tuning
-5. **Test** - Write xUnit tests with TestServer, achieve 80%+ coverage
-
-## Reference Guide
-
-Load detailed guidance based on context:
-
-| Topic | Reference | Load When |
-| --- | --- | --- |
-| Modern C# | `references/modern-csharp.md` | Records, pattern matching, nullable types |
-| ASP.NET Core | `references/aspnet-core.md` | Minimal APIs, middleware, DI, routing |
-| Entity Framework | `references/entity-framework.md` | EF Core, migrations, query optimization |
-| Blazor | `references/blazor.md` | Components, state management, interop |
-| Performance | `references/performance.md` | Span<T>, async, memory optimization, AOT |
-
-## Constraints
-
-### MUST DO
-
-- Enable nullable reference types in all projects
-- Use file-scoped namespaces and primary constructors (C# 12)
-- Apply async/await for all I/O operations
-- Use dependency injection for all services
-- Include XML documentation for public APIs
-- Implement proper error handling with Result pattern
-- Use strongly-typed configuration with IOptions<T>
-
-### MUST NOT DO
-
-- Use blocking calls (.Result, .Wait()) in async code
-- Disable nullable warnings without proper justification
-- Skip cancellation token support in async methods
-- Expose EF Core entities directly in API responses
-- Use string-based configuration keys
-- Skip input validation
-- Ignore code analysis warnings
-
-## Output Templates
-
-When implementing .NET features, provide:
-
-1. Domain models and DTOs
-2. API endpoints (Minimal API or controllers)
-3. Repository/service implementations
-4. Configuration setup (Program.cs, appsettings.json)
-5. Brief explanation of architectural decisions
-
-## Knowledge Reference
-
-C# 12, .NET 8, ASP.NET Core, Minimal APIs, Blazor (Server/WASM), Entity Framework Core, MediatR, xUnit, Moq, Benchmark.NET, SignalR, gRPC, Azure SDK, Polly, FluentValidation, Serilog
+- **Async all the way down.** `.Result` and `.Wait()` deadlock under a synchronisation context and burn a thread pool thread everywhere else. If a call chain has to be async at the bottom, it is async at the top.
+- **Accept and pass a `CancellationToken` on every async public method.** Without it a cancelled request keeps its database query and HTTP call running to completion, and the work is charged to a caller who has already gone.
+- **Never expose EF entities from an API.** Project to a DTO with `Select` — otherwise you ship whatever the schema grows next, and lazy loading turns serialisation into an N+1 query storm.
+- **EF specifics that show up as production incidents rather than test failures:** `AsNoTracking()` on every read-only query, since change tracking on a large result set is pure overhead; `AsSplitQuery()` when `Include`-ing more than one collection, because a single join multiplies rows cartesian-style; `ExecuteUpdateAsync`/`ExecuteDeleteAsync` (.NET 7+) for bulk changes rather than loading entities to modify them; a global `HasQueryFilter` for soft deletes so no query can forget the flag.
+- **Keyed services when one interface has several implementations** (.NET 8): register with `AddKeyedScoped<INotifier, EmailNotifier>("email")` and resolve with `[FromKeyedServices("email")]`. It beats an enum-switching factory because the container still owns the lifetimes.
+- **`IOptions<T>` with validated, strongly-typed config.** `configuration["Some:Key"]` fails at the call site, at runtime, on a typo. A bound options class with `ValidateOnStart` fails at boot with the field named.
+- **`IHttpClientFactory`, never `new HttpClient()` per call** — socket exhaustion from lingering TIME_WAIT connections is the classic failure, and it only appears under load.
+- **`Span<T>`/`Memory<T>` and pooling where a profiler says allocations matter.** They complicate the code, so spend that complexity where there is a measurement, not on principle.

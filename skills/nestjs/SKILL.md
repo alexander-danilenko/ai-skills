@@ -1,77 +1,24 @@
 ---
 name: nestjs
-description: "Apply these opinionated NestJS conventions when writing NestJS backends: module structure, dependency injection, controllers and services, DTOs with class-validator, guards/interceptors/pipes, JWT authentication, TypeORM/Prisma."
+description: "Apply these opinionated NestJS conventions whenever writing or reviewing a NestJS backend: module boundaries and what to export, breaking circular imports without forwardRef, keeping logic in services, DTOs with class-validator behind a whitelisting ValidationPipe, response DTOs so entities never leak, picking correctly between guards/interceptors/pipes/filters, and validated ConfigModule."
 ---
 
-# NestJS Expert
+# NestJS
 
-Senior NestJS specialist with deep expertise in enterprise-grade, scalable TypeScript backend applications.
+House conventions for NestJS backends. Apply them to code you are writing or changing — don't restructure untouched modules unless asked.
 
-## Role Definition
+## Conventions
 
-You are a senior Node.js engineer with 10+ years of backend experience. You specialize in NestJS architecture, dependency injection, and enterprise patterns. You build modular, testable applications with proper separation of concerns.
-
-## When to Use This Skill
-
-- Building NestJS REST APIs or GraphQL services
-- Implementing modules, controllers, and services
-- Creating DTOs with validation
-- Setting up authentication (JWT, Passport)
-- Implementing guards, interceptors, and pipes
-- Database integration with TypeORM or Prisma
-
-## Core Workflow
-
-1. **Analyze requirements** - Identify modules, endpoints, entities
-2. **Design structure** - Plan module organization and dependencies
-3. **Implement** - Create modules, services, controllers with DI
-4. **Secure** - Add guards, validation, authentication
-5. **Test** - Write unit tests and E2E tests
-
-## Reference Guide
-
-Load detailed guidance based on context:
-
-| Topic | Reference | Load When |
-| --- | --- | --- |
-| Controllers | `references/controllers-routing.md` | Creating controllers, routing, Swagger docs |
-| Services | `references/services-di.md` | Services, dependency injection, providers |
-| DTOs | `references/dtos-validation.md` | Validation, class-validator, DTOs |
-| Authentication | `references/authentication.md` | JWT, Passport, guards, authorization |
-| Testing | `references/testing-patterns.md` | Unit tests, E2E tests, mocking |
-| Express Migration | `references/migration-from-express.md` | Migrating from Express.js to NestJS |
-
-## Constraints
-
-### MUST DO
-
-- Use dependency injection for all services
-- Validate all inputs with class-validator
-- Use DTOs for request/response bodies
-- Implement proper error handling with HTTP exceptions
-- Document APIs with Swagger decorators
-- Write unit tests for services
-- Use environment variables for configuration
-
-### MUST NOT DO
-
-- Expose passwords or secrets in responses
-- Trust user input without validation
-- Use `any` type unless absolutely necessary
-- Create circular dependencies between modules
-- Hardcode configuration values
-- Skip error handling
-
-## Output Templates
-
-When implementing NestJS features, provide:
-
-1. Module definition
-2. Controller with Swagger decorators
-3. Service with error handling
-4. DTOs with validation
-5. Tests for service methods
-
-## Knowledge Reference
-
-NestJS, TypeScript, TypeORM, Prisma, Passport, JWT, class-validator, class-transformer, Swagger/OpenAPI, Jest, Supertest, Guards, Interceptors, Pipes, Filters
+- **A module owns one domain** and exports only what other modules legitimately need. A provider that isn't exported can be refactored freely; one that is becomes public API.
+- **A circular import between modules is a design signal, not a `forwardRef` problem.** `forwardRef` makes it compile and leaves the cycle. Extract the shared piece into its own module instead.
+- **Controllers translate HTTP; services hold the logic.** A controller that branches on business rules can't be reused by a job, a CLI, or a queue consumer, and its tests need an HTTP layer to say anything.
+- **Every request body, query, and param goes through a DTO with `class-validator`**, behind a global `ValidationPipe` with `whitelist: true`, `forbidNonWhitelisted: true`, `transform: true`. Whitelisting is the part that matters: without it, an unexpected property rides through into your persistence layer.
+- **`@ValidateNested()` needs `@Type(() => Child)` beside it.** class-transformer can't infer the target class from the TypeScript type, so without `@Type` the nested object stays a plain object and its rules never run — the request passes validation while carrying unvalidated data. Same for arrays, with `{ each: true }`.
+- **Take `PartialType`/`OmitType`/`PickType` from `@nestjs/swagger`**, not `@nestjs/mapped-types`. Both exist and both compile; the mapped-types version silently drops the `@ApiProperty` metadata, so derived DTOs vanish from your OpenAPI schema.
+- **A request-scoped provider makes every consumer request-scoped.** The scope propagates up the injection chain, so one `Scope.REQUEST` service quietly turns a tree of singletons into per-request instantiation. Reach for it only when you genuinely need per-request state, and know what it drags with it.
+- **Response DTOs are what leaves the process.** Returning an entity directly leaks whatever a future migration adds to the table — password hashes, internal flags, soft-delete columns — with no code change to notice.
+- **The right primitive for the concern.** Guards decide access, interceptors shape the request/response cycle, pipes transform and validate input, filters map exceptions to responses. A guard doing transformation runs at the wrong point in the lifecycle and won't see what it expects.
+- **Throw the framework's HTTP exceptions** (`NotFoundException`, `ConflictException`, …). A bare `Error` becomes a 500, so a legitimate "not found" reads as an outage in your alerting.
+- **`ConfigModule` with a validated schema, injected via `ConfigService`.** Reading `process.env` inside a service makes the value untestable and defers a missing-config failure to whenever that line first runs — usually in production.
+- **Swagger decorators on every endpoint** (`@ApiOperation`, `@ApiResponse`). The generated spec is what clients build against; an undocumented endpoint is one nobody can consume without reading your source.
+- **Tests: see the `testing` skill's NestJS Jest references** for structure, mocking, and assertion rules.

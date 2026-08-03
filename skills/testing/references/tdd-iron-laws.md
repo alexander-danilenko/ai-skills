@@ -1,179 +1,40 @@
 # TDD Iron Laws
 
----
+## The rule
 
-## The Fundamental Principle
+**No production code without a failing test first.** If you wrote the code first, delete it and start over.
 
-> **NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.**
+The reason this is absolute rather than a preference: a test written after the code is shaped by the code. You already know how it works, so you test the path you built instead of the behaviour you needed — and you never find out whether the test can fail at all.
 
-This is non-negotiable. If you wrote production code before writing a failing test, delete it and start over. No exceptions.
+## Three laws
 
----
+1. **Production code exists only to make a failing test pass.** Every line traces back to a test that was written first and observed failing.
+2. **If you did not watch it fail, you do not know what it tests.** Run the test, see red, and read the failure message — a test that has never failed proves nothing, and a test that passes against an empty implementation is testing nothing.
+3. **No prior failing test means it is not TDD**, however many tests exist afterwards.
 
-## The Three Iron Laws
+## Red → Green → Refactor
 
-### Iron Law 1: The Fundamental Rule
+- **Red** — one minimal failing test. Smallest scope, clear failure message, observed failing.
+- **Green** — the simplest code that passes it. No extra features, no optimisation. Under-implementing here is deliberate: the next test is what forces the general solution, and if it doesn't, the general solution wasn't needed.
+- **Refactor** — improve the code with the tests staying green. No new behaviour.
 
-> "You shall not write any production code unless it is to make a failing test pass."
+## Rationalizations to reject
 
-Every line of production code must have a corresponding test that:
+Each of these is the moment the discipline is about to break.
 
-1. Was written first
-2. Was observed to fail
-3. Now passes because of that code
-
-### Iron Law 2: Proof Through Observation
-
-> "If you didn't watch the test fail, you don't know if it tests the right thing."
-
-Mandatory verification steps:
-
-- Write the test
-- Run it and **observe the failure**
-- Verify the failure message is meaningful
-- Only then implement the fix
-
-A test you've never seen fail proves nothing.
-
-### Iron Law 3: The Final Rule
-
-> "Production code exists → A test exists that failed first. Otherwise → It's not TDD."
-
-There is no middle ground. Code written without a prior failing test is not test-driven development, regardless of how many tests exist afterward.
-
----
-
-## The RED-GREEN-REFACTOR Cycle
-
-### RED: Write One Minimal Failing Test
-
-```typescript
-// Start with the smallest possible failing test
-it("should return 0 for empty array", () => {
-  expect(sum([])).toBe(0);
-});
-// Run: ✗ FAIL - sum is not defined
-```
-
-**Requirements:**
-
-- One test at a time
-- Minimal scope
-- Clear failure message
-- Observe the red
-
-### GREEN: Implement Simplest Passing Code
-
-```typescript
-// Write only enough code to pass this specific test
-function sum(numbers: number[]): number {
-  return 0;
-}
-// Run: ✓ PASS
-```
-
-**Requirements:**
-
-- Simplest possible implementation
-- No extra features
-- No optimization
-- Just make it pass
-
-### REFACTOR: Improve While Keeping Tests Green
-
-```typescript
-// Now improve the code while tests stay green
-function sum(numbers: number[]): number {
-  return numbers.reduce((acc, n) => acc + n, 0);
-}
-// Run: ✓ PASS (still)
-```
-
-**Requirements:**
-
-- Tests must stay green
-- Remove duplication
-- Improve clarity
-- No new functionality
-
----
-
-## Common Rationalizations to Reject
-
-These thoughts indicate you're about to violate TDD:
-
-| Rationalization | Why It's Wrong |
+| Thought | Why it's wrong |
 | --- | --- |
-| "I can manually test this quickly" | Manual testing doesn't prevent regression |
-| "I'll write tests after to save time" | You'll skip edge cases and test implementation |
-| "This is too simple to need a test" | Simple code changes; tests document expectations |
-| "I've already written the code, I can't delete it now" | Sunk cost fallacy; delete it |
-| "I know this works, I've done it before" | Your memory isn't documentation |
-| "We're in a hurry" | Technical debt costs more than TDD |
+| "I can test this manually, faster" | Manual testing doesn't prevent the regression next month |
+| "I'll add tests after, to save time" | After-the-fact tests follow the code and skip its edges |
+| "Too simple to need a test" | Simple code changes; the test is what documents the intent |
+| "I already wrote it, I can't delete it now" | Sunk cost. Delete it — you'll rewrite it in minutes |
+| "I know this works, I've done it before" | Your memory isn't executable |
+| "We're in a hurry" | Debugging untested code is what you're in a hurry from |
+
+## For a bug fix
+
+Write the test that reproduces the bug and watch it fail. That failure is proof you've actually found the bug rather than a plausible-looking neighbour — and once it passes, the same test is the regression guard.
 
 ---
 
-## Practical Application
-
-### Starting a New Feature
-
-```typescript
-// 1. RED: Write failing test for simplest behavior
-describe("UserValidator", () => {
-  it("should reject empty email", () => {
-    expect(validateEmail("")).toBe(false);
-  });
-});
-
-// 2. GREEN: Implement minimal passing code
-function validateEmail(email: string): boolean {
-  return email.length > 0;
-}
-
-// 3. RED: Add next failing test
-it("should reject email without @", () => {
-  expect(validateEmail("invalid")).toBe(false);
-});
-
-// 4. GREEN: Extend to pass both tests
-function validateEmail(email: string): boolean {
-  return email.length > 0 && email.includes("@");
-}
-
-// Continue cycle...
-```
-
-### Fixing a Bug
-
-```typescript
-// 1. RED: Write test that exposes the bug
-it("should handle negative numbers in sum", () => {
-  expect(sum([-1, -2, -3])).toBe(-6);
-});
-// Run: ✗ FAIL - got 0 instead of -6
-
-// 2. GREEN: Fix the bug
-function sum(numbers: number[]): number {
-  return numbers.reduce((acc, n) => acc + n, 0);
-}
-// Run: ✓ PASS
-
-// Bug is now fixed AND protected against regression
-```
-
----
-
-## Verification Checklist
-
-Before claiming any code is complete:
-
-- [ ] Every production function has corresponding tests
-- [ ] Each test was written before its implementation
-- [ ] Each test was observed to fail first
-- [ ] Tests verify behavior, not implementation
-- [ ] Refactoring kept all tests green
-- [ ] No production code exists without a test
-
----
-
-_Content adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (@obra), MIT License._
+_Adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (@obra), MIT License._
