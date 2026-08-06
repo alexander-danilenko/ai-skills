@@ -68,6 +68,6 @@ Add a markdownlint disable only when the rule is genuinely wrong for this codeba
 - **Naming**: kebab-case for skill directories and files.
 - **Formatting**: UTF-8, LF, 2-space indent — see `.editorconfig`.
 - **Reference files**: conditionally loaded by SKILL.md — never standalone skills.
-- **Frontmatter**: `name` and `description` only. Do not add `allowed-tools`.
+- **Frontmatter**: `name` and `description`, plus `argument-hint` on a skill that takes a mode or target argument. Nothing else — in particular, no `allowed-tools`.
 
   `allowed-tools` is not a capability declaration — it pre-approves tools so they run **without a permission prompt** for the turn that invokes the skill. Adding it means these skills silently bypass the consumer's own permission settings, which is not ours to decide for someone installing a plugin. Leaving it out means every tool call goes through their configured permissions. (The field that actually restricts is `disallowed-tools`, which removes tools from the pool while a skill is active — only justified for a skill that must never call something, and none of ours qualify.)

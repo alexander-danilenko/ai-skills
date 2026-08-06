@@ -48,6 +48,7 @@ Install it once and your conventions follow you around. Nothing to paste at the 
 - **`/cortex:legacy-modernization`** — Strangler fig, branch by abstraction, characterization tests, framework upgrades.
 - **`/cortex:jira-report-comment`** — Turn git commits into a business-friendly Jira implementation report.
 - **`/cortex:humanize-text`** — Strip "AI fingerprints" from text so writing reads natural.
+- **`/cortex:simple-english`** — ASD-STE100 Simplified Technical English for docs, runbooks, and error messages.
 
 ## 💡 Why Cortex
 
