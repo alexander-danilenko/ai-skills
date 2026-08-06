@@ -25,6 +25,20 @@ For `@param` and `@returns` specifically, **drop the tag entirely when it would 
 
 `@throws` is the opposite default — document it whenever code can throw, because the throw set is invisible from the signature.
 
+## How the prose reads
+
+Every sentence you produce here — summaries, the `@param` notes that survive, `@throws` conditions, endpoint descriptions — gets read mid-debug by someone who may not share your first language. Load the `simple-english` skill at practical depth (`/cortex:simple-english practical`) and hold its rules while you write. Reach for it before the first doc block, not as a cleanup pass: rewriting prose you already committed to costs more than writing it right once.
+
+What it changes in a doc block specifically:
+
+- **One word per concept, file-wide.** A `@param` that says "validate" beside a summary that says "check" reads as two different operations, and the reader goes looking for the difference.
+- **25 words for a descriptive sentence, 20 for an imperative one.** A summary past that is carrying more than one fact and belongs in two sentences, or in `@remarks`.
+- **`can`, `will`, `must` — never `should`.** A contract that says a caller "should" pass a sorted array leaves the reader guessing whether the rule binds. Say `must`, or state what happens when they do not.
+- **Condition before consequence.** "If `retries` is `0`, the call fails immediately" beats the reverse ordering, because the reader knows whether the sentence applies to them before they parse the outcome.
+- **No adjective without a measurement behind it.** "Efficiently caches" earns nothing. Give the bound or drop the word.
+
+Identifiers, code samples, and quoted error strings stay exact — the standard treats them as technical names, and a reader who copies a "corrected" one gets a new error.
+
 ## Conventions
 
 - **Third-person summaries for code symbols** — "Calculates…", "Finds…", "Initializes a new…" — matching Microsoft API reference convention. Two exceptions keep the imperative: inline `//` comments on procedural steps, and API operation `summary` fields (OpenAPI, `@ApiOperation`, `extend_schema`), where "Create a new user" is the established form.
